@@ -130,13 +130,16 @@
     border-radius:22px;
     box-shadow:0 6px 24px rgba(20,20,40,.06);
     padding:30px 28px;
-    margin-bottom:22px;
-    opacity:0; transform:translateY(30px);
-    transition:transform .3s ease, box-shadow .3s ease;
+    margin-bottom:26px;
+    opacity:0; transform:translateY(40px) scale(0.97);
+    transition:transform .4s ease, box-shadow .3s ease;
   }
-  .card:hover{ transform:translateY(-3px); box-shadow:0 14px 34px rgba(20,20,40,.1); }
-  .card.in-view{ animation:cardIn .7s cubic-bezier(.22,1,.36,1) forwards; }
-  @keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
+  .card:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(20,20,40,.12); }
+  .card.in-view{ animation:cardIn 0.75s cubic-bezier(.22,1,.36,1) forwards; }
+  @keyframes cardIn{
+    from { opacity:0; transform:translateY(40px) scale(0.97); }
+    to { opacity:1; transform:translateY(0) scale(1); }
+  }
 
   .qnum{
     display:inline-block; font-family:'Baloo 2',sans-serif; font-weight:700;
@@ -158,8 +161,8 @@
   /* donut */
   .donut-wrap{
     position:relative; width:170px; height:170px; flex-shrink:0;
-    transform:scale(.5) rotate(-90deg); opacity:0;
-    transition:transform .8s cubic-bezier(.22,1.4,.4,1), opacity .6s ease;
+    transform:scale(.3) rotate(-120deg); opacity:0;
+    transition:transform 0.9s cubic-bezier(.22,1.3,.36,1), opacity 0.6s ease;
   }
   .card.in-view .donut-wrap{ transform:scale(1) rotate(0deg); opacity:1; }
   .donut{ width:100%; height:100%; border-radius:50%; }
@@ -172,16 +175,27 @@
   .donut-hole .top-lbl{ font-size:9.5px; color:var(--muted); text-align:center; padding:0 10px; line-height:1.2; margin-top:2px; }
 
   /* legend / bars */
-  .legend{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:12px; }
-  .bars{ display:flex; flex-direction:column; gap:12px; }
-  .leg-row{ display:flex; flex-direction:column; gap:5px; }
+  .legend{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:14px; }
+  .bars{ display:flex; flex-direction:column; gap:14px; }
+  .leg-row{
+    display:flex; flex-direction:column; gap:6px;
+    opacity:0; transform:translateY(14px);
+    transition:opacity 0.5s cubic-bezier(.22,1,.36,1), transform 0.5s cubic-bezier(.22,1,.36,1);
+    transition-delay:calc(var(--delay-idx, 0) * 0.14s + 0.1s);
+  }
+  .card.in-view .leg-row{
+    opacity:1; transform:translateY(0);
+  }
   .leg-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:13.5px; }
   .leg-label{ display:flex; align-items:center; gap:8px; color:#333; font-weight:600; }
   .swatch{ width:10px; height:10px; border-radius:3px; flex-shrink:0; }
   .leg-pct{ font-weight:800; font-family:'Baloo 2',sans-serif; font-size:14.5px; white-space:nowrap; }
-  .leg-count{ color:var(--muted); font-size:11.5px; font-weight:600; }
   .track{ height:9px; border-radius:6px; background:var(--track); overflow:hidden; }
-  .fill{ height:100%; width:0%; border-radius:6px; transition:width 1s cubic-bezier(.22,1,.36,1); }
+  .fill{
+    height:100%; width:0%; border-radius:6px;
+    transition:width 0.9s cubic-bezier(.22,1,.36,1);
+    transition-delay:calc(var(--delay-idx, 0) * 0.14s + 0.2s);
+  }
   .card.in-view .fill{ width:var(--w); }
 
   footer.note{
@@ -314,12 +328,12 @@ QUESTIONS.forEach((q, qi) => {
   card.className = 'card';
 
   const legendHTML = q.options.map((o,i)=>`
-    <div class="leg-row">
+    <div class="leg-row" style="--delay-idx:${i}">
       <div class="leg-top">
         <span class="leg-label"><span class="swatch" style="background:${PALETTE[i]}"></span>${o.label}</span>
         <span class="leg-pct" style="color:${PALETTE[i]}" data-target="${o.pct}">0%</span>
       </div>
-      ${q.type==='multi' ? `<div class="track"><div class="fill" style="--w:${o.pct}%; background:${PALETTE[i]}"></div></div>` : ''}
+      <div class="track"><div class="fill" style="--w:${o.pct}%; background:${PALETTE[i]}"></div></div>
     </div>
   `).join("");
 
@@ -366,19 +380,32 @@ function countUp(el, target, duration=900){
 
 // ---------- reveal on scroll ----------
 const io = new IntersectionObserver((entries)=>{
-  entries.forEach(entry=>{
+  entries.forEach((entry)=>{
     if(entry.isIntersecting){
       entry.target.classList.add('in-view');
-      entry.target.querySelectorAll('.leg-pct').forEach(el=>{
-        if(!el.dataset.done){
+      const rows = entry.target.querySelectorAll('.leg-row');
+      rows.forEach((row, i)=>{
+        const el = row.querySelector('.leg-pct');
+        if(el && !el.dataset.done){
           el.dataset.done = "1";
-          countUp(el, parseFloat(el.dataset.target));
+          setTimeout(()=>{
+            countUp(el, parseFloat(el.dataset.target), 800);
+          }, i * 140 + 100);
         }
       });
+      const topEl = entry.target.querySelector('.top-pct');
+      if(topEl && !topEl.dataset.done){
+        topEl.dataset.done = "1";
+        const val = parseFloat(topEl.textContent);
+        topEl.textContent = "0%";
+        setTimeout(()=>{
+          countUp(topEl, val, 900);
+        }, 150);
+      }
       io.unobserve(entry.target);
     }
   });
-}, { threshold:.25 });
+}, { threshold:.15 });
 
 document.querySelectorAll('.card').forEach(c=>io.observe(c));
 
