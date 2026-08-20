@@ -63,14 +63,6 @@
   .loader-text{
     font-weight:700; font-size:14px; color:var(--muted); letter-spacing:.4px;
   }
-  .loader-bar-track{
-    width:100%; height:8px; background:var(--track); border-radius:10px; overflow:hidden;
-  }
-  .loader-bar-fill{
-    height:100%; width:0%; border-radius:10px;
-    background:linear-gradient(90deg,var(--red),var(--orange));
-    transition:width 0.05s linear;
-  }
   body.loading #page{ visibility:hidden; }
 
   /* ---------------- scroll progress ---------------- */
@@ -266,9 +258,6 @@
       <div class="loader-pct" id="loaderPct">0%</div>
     </div>
     <div class="loader-text">Loading Survey Results...</div>
-    <div class="loader-bar-track">
-      <div class="loader-bar-fill" id="loaderBar"></div>
-    </div>
   </div>
 </div>
 <div id="progress"></div>
@@ -513,7 +502,6 @@ window.addEventListener('load', () => {
   window.scrollTo(0, 0);
 
   const pctEl = document.getElementById('loaderPct');
-  const barEl = document.getElementById('loaderBar');
   const ringEl = document.getElementById('loaderRing');
   const DURATION = 5000; // 5 SECONDS EXACTLY
   const start = performance.now();
@@ -524,7 +512,6 @@ window.addEventListener('load', () => {
     const pct = Math.floor(progress * 100);
 
     if (pctEl) pctEl.textContent = pct + '%';
-    if (barEl) barEl.style.width = pct + '%';
     if (ringEl) ringEl.style.strokeDasharray = `${pct} 100`;
 
     if (progress < 1) {
@@ -532,7 +519,6 @@ window.addEventListener('load', () => {
     } else {
       // 100% reached after 5 seconds!
       if (pctEl) pctEl.textContent = '100%';
-      if (barEl) barEl.style.width = '100%';
       if (ringEl) ringEl.style.strokeDasharray = '100 100';
 
       setTimeout(() => {
