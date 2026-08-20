@@ -212,11 +212,6 @@
     <span class="eyebrow">Survey results</span>
     <h1><span class="ai">AI</span> Usage &amp; Habits Survey</h1>
     <p class="sub">What people actually do with AI day to day straight from the responses.</p>
-    <div class="stats">
-      <div class="stat"><div class="num" id="statResponses">0</div><div class="lbl">Responses</div></div>
-      <div class="stat"><div class="num">7</div><div class="lbl">Questions</div></div>
-      <div class="stat"><div class="num" id="statTop">42.9%</div><div class="lbl">Top habit</div></div>
-    </div>
   </section>
 
   <div class="survey" id="surveyMount"></div>
@@ -324,7 +319,6 @@ QUESTIONS.forEach((q, qi) => {
         <span class="leg-label"><span class="swatch" style="background:${PALETTE[i]}"></span>${o.label}</span>
         <span class="leg-pct" style="color:${PALETTE[i]}" data-target="${o.pct}">0%</span>
       </div>
-      ${q.type==='single' ? `<div class="leg-count">${o.count} of ${N} respondents</div>` : ''}
       ${q.type==='multi' ? `<div class="track"><div class="fill" style="--w:${o.pct}%; background:${PALETTE[i]}"></div></div>` : ''}
     </div>
   `).join("");
@@ -402,19 +396,6 @@ window.addEventListener('load', () => {
     document.getElementById('loader').classList.add('hide');
     document.body.classList.remove('loading');
     document.body.classList.add('revealed');
-    countUp(document.getElementById('statResponses'), 77, 1100);
-    document.getElementById('statResponses').textContent = '0'; // reset suffix override below
-    // statResponses should not have % suffix — custom count-up
-    const el = document.getElementById('statResponses');
-    const start = performance.now();
-    function tick(now){
-      const p = Math.min((now-start)/1100, 1);
-      const eased = 1 - Math.pow(1-p, 3);
-      el.textContent = Math.round(77*eased);
-      if(p < 1) requestAnimationFrame(tick);
-      else el.textContent = 77;
-    }
-    requestAnimationFrame(tick);
   }, 3000);
 });
 </script>
