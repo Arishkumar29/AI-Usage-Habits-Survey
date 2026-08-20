@@ -161,15 +161,25 @@
   /* donut */
   .donut-wrap{
     position:relative; width:170px; height:170px; flex-shrink:0;
-    transform:scale(.3) rotate(-120deg); opacity:0;
-    transition:transform 0.9s cubic-bezier(.22,1.3,.36,1), opacity 0.6s ease;
+    transform:scale(.5) rotate(-30deg); opacity:0;
+    transition:transform 0.8s cubic-bezier(.22,1.3,.36,1), opacity 0.5s ease;
   }
   .card.in-view .donut-wrap{ transform:scale(1) rotate(0deg); opacity:1; }
-  .donut{ width:100%; height:100%; border-radius:50%; }
+  .donut-svg{ width:100%; height:100%; overflow:visible; }
+  .donut-slice{
+    stroke-dasharray:0 100;
+    transition:stroke-dasharray 0.75s cubic-bezier(.22,1,.36,1), stroke-width 0.25s ease, filter 0.25s ease;
+    cursor:pointer;
+  }
+  .donut-slice:hover{
+    filter:brightness(1.15);
+    stroke-width:17;
+  }
   .donut-hole{
     position:absolute; inset:22px; background:#fff; border-radius:50%;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.03);
+    box-shadow:0 4px 16px rgba(0,0,0,.06), inset 0 0 0 1px rgba(0,0,0,.03);
+    pointer-events:none;
   }
   .donut-hole .top-pct{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; }
   .donut-hole .top-lbl{ font-size:9.5px; color:var(--muted); text-align:center; padding:0 10px; line-height:1.2; margin-top:2px; }
@@ -311,14 +321,31 @@ const QUESTIONS = [
 
 const PALETTE = ["var(--red)","var(--orange)","var(--blue)","var(--teal)","var(--purple)","var(--pink)","var(--green)"];
 
-function buildDonut(options){
+function buildSvgDonut(options){
   let acc = 0;
-  const stops = options.map((o,i)=>{
-    const start = acc;
+  const slices = options.map((o,i)=>{
+    const startPct = acc;
     acc += o.pct;
-    return `${PALETTE[i]} ${start}% ${acc}%`;
-  }).join(", ");
-  return `conic-gradient(${stops})`;
+    const angle = -90 + (startPct * 3.6);
+    const color = PALETTE[i];
+    return `
+      <circle class="donut-slice"
+        cx="50" cy="50" r="36"
+        fill="none"
+        stroke="${color}"
+        stroke-width="14"
+        pathLength="100"
+        stroke-dasharray="0 100"
+        data-target-dash="${o.pct} 100"
+        transform="rotate(${angle.toFixed(2)} 50 50)"
+      />`;
+  }).join("");
+
+  return `
+    <svg viewBox="0 0 100 100" class="donut-svg">
+      <circle cx="50" cy="50" r="36" fill="none" stroke="var(--track)" stroke-width="14" />
+      ${slices}
+    </svg>`;
 }
 
 const mount = document.getElementById('surveyMount');
@@ -343,7 +370,7 @@ QUESTIONS.forEach((q, qi) => {
     bodyHTML = `
       <div class="body-row">
         <div class="donut-wrap">
-          <div class="donut" style="background:${buildDonut(q.options)}"></div>
+          ${buildSvgDonut(q.options)}
           <div class="donut-hole">
             <div class="top-pct" style="color:${PALETTE[0]}">${top.pct}%</div>
             <div class="top-lbl">${top.label}</div>
@@ -383,6 +410,16 @@ const io = new IntersectionObserver((entries)=>{
   entries.forEach((entry)=>{
     if(entry.isIntersecting){
       entry.target.classList.add('in-view');
+
+      // Animate donut pie chart slices one by one
+      const slices = entry.target.querySelectorAll('.donut-slice');
+      slices.forEach((slice, i)=>{
+        const targetDash = slice.getAttribute('data-target-dash');
+        setTimeout(()=>{
+          slice.style.strokeDasharray = targetDash;
+        }, i * 220 + 150);
+      });
+
       const rows = entry.target.querySelectorAll('.leg-row');
       rows.forEach((row, i)=>{
         const el = row.querySelector('.leg-pct');
