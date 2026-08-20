@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Usage & Habits Survey — Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#EA3A17;
+    --orange:#FF8A1E;
+    --blue:#1B58D8;
+    --teal:#0EA5A5;
+    --purple:#7C5CFC;
+    --pink:#F2374B;
+    --green:#22A559;
+    --ink:#1C2130;
+    --muted:#666C79;
+    --page-bg:#F5F5F9;
+    --card-bg:#ffffff;
+    --track:#EEF0F4;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    background:var(--page-bg);
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+
+  /* ---------------- loader ---------------- */
+  #loader{
+    position:fixed; inset:0; background:var(--page-bg);
+    display:flex; align-items:center; justify-content:center;
+    z-index:999; transition:opacity .5s ease, visibility .5s ease;
+  }
+  #loader.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  .spinner{
+    width:56px; height:56px; border-radius:50%;
+    border:5px solid #E4E6EC;
+    border-top-color:var(--orange);
+    border-right-color:var(--red);
+    animation:spin .9s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  body.loading #page{ visibility:hidden; }
+
+  /* ---------------- scroll progress ---------------- */
+  #progress{
+    position:fixed; top:0; left:0; height:4px; width:0%;
+    background:linear-gradient(90deg,var(--red),var(--orange));
+    z-index:998; transition:width .1s linear;
+  }
+
+  /* ---------------- ambient blobs ---------------- */
+  .blob{
+    position:fixed; border-radius:50%; filter:blur(70px);
+    opacity:.16; z-index:0; pointer-events:none;
+  }
+  .blob1{ width:340px; height:340px; background:var(--red); top:-100px; left:-120px; animation:drift1 16s ease-in-out infinite; }
+  .blob2{ width:300px; height:300px; background:var(--blue); bottom:10%; right:-120px; animation:drift2 18s ease-in-out infinite; }
+  .blob3{ width:260px; height:260px; background:var(--orange); top:45%; left:-140px; animation:drift3 20s ease-in-out infinite; }
+  @keyframes drift1{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(60px,50px); } }
+  @keyframes drift2{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-50px,-40px); } }
+  @keyframes drift3{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(40px,-60px); } }
+  @media (prefers-reduced-motion:reduce){
+    .blob{ animation:none; }
+  }
+
+  #page{ position:relative; z-index:1; }
+
+  /* ---------------- hero ---------------- */
+  .hero{
+    text-align:center;
+    padding:64px 20px 40px;
+  }
+  .hero .eyebrow{
+    display:inline-block;
+    font-weight:800; font-size:12.5px; letter-spacing:1.6px;
+    text-transform:uppercase; color:var(--red);
+    background:rgba(234,58,23,.09);
+    padding:6px 14px; border-radius:20px;
+    margin-bottom:16px;
+    opacity:0; transform:translateY(-10px);
+  }
+  body.revealed .hero .eyebrow{ animation:fadeDown .6s .1s ease forwards; }
+  .hero h1{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700; font-size:clamp(28px,5vw,42px);
+    margin:0 0 12px;
+    opacity:0; transform:translateY(14px);
+  }
+  body.revealed .hero h1{ animation:fadeUp .7s .2s cubic-bezier(.22,1,.36,1) forwards; }
+  .hero h1 .ai{ color:var(--orange); }
+  .hero p.sub{
+    color:var(--muted); font-size:16px; max-width:480px; margin:0 auto 30px;
+    opacity:0; transform:translateY(14px);
+  }
+  body.revealed .hero p.sub{ animation:fadeUp .7s .3s cubic-bezier(.22,1,.36,1) forwards; }
+  @keyframes fadeDown{ to{ opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp{ to{ opacity:1; transform:translateY(0); } }
+
+  .stats{
+    display:flex; justify-content:center; gap:14px; flex-wrap:wrap;
+    opacity:0; transform:translateY(14px);
+  }
+  body.revealed .stats{ animation:fadeUp .7s .4s cubic-bezier(.22,1,.36,1) forwards; }
+  .stat{
+    background:#fff; border-radius:16px; padding:16px 26px;
+    box-shadow:0 6px 20px rgba(20,20,40,.06);
+    min-width:130px;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .stat:hover{ transform:translateY(-4px); box-shadow:0 10px 26px rgba(20,20,40,.1); }
+  .stat .num{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:30px;
+    background:linear-gradient(90deg,var(--red),var(--orange));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .stat .lbl{ font-size:12.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+
+  /* ---------------- cards ---------------- */
+  .survey{ max-width:900px; margin:0 auto; padding:20px 18px 90px; }
+
+  .card{
+    background:var(--card-bg);
+    border-radius:22px;
+    box-shadow:0 6px 24px rgba(20,20,40,.06);
+    padding:30px 28px;
+    margin-bottom:22px;
+    opacity:0; transform:translateY(30px);
+    transition:transform .3s ease, box-shadow .3s ease;
+  }
+  .card:hover{ transform:translateY(-3px); box-shadow:0 14px 34px rgba(20,20,40,.1); }
+  .card.in-view{ animation:cardIn .7s cubic-bezier(.22,1,.36,1) forwards; }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
+
+  .qnum{
+    display:inline-block; font-family:'Baloo 2',sans-serif; font-weight:700;
+    font-size:12px; color:#fff; background:var(--ink);
+    padding:3px 11px; border-radius:20px; margin-bottom:12px;
+    opacity:.85;
+  }
+  .qtitle{
+    font-family:'Baloo 2',sans-serif; font-weight:600; font-size:19px;
+    line-height:1.35; margin:0 0 6px;
+  }
+  .qnote{ font-size:12.5px; color:var(--muted); margin:0 0 20px; font-style:italic; }
+  .qtitle + .legend, .qtitle + .bars{ margin-top:20px; }
+
+  .body-row{
+    display:flex; align-items:center; gap:34px; flex-wrap:wrap;
+  }
+
+  /* donut */
+  .donut-wrap{
+    position:relative; width:170px; height:170px; flex-shrink:0;
+    transform:scale(.5) rotate(-90deg); opacity:0;
+    transition:transform .8s cubic-bezier(.22,1.4,.4,1), opacity .6s ease;
+  }
+  .card.in-view .donut-wrap{ transform:scale(1) rotate(0deg); opacity:1; }
+  .donut{ width:100%; height:100%; border-radius:50%; }
+  .donut-hole{
+    position:absolute; inset:22px; background:#fff; border-radius:50%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.03);
+  }
+  .donut-hole .top-pct{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; }
+  .donut-hole .top-lbl{ font-size:9.5px; color:var(--muted); text-align:center; padding:0 10px; line-height:1.2; margin-top:2px; }
+
+  /* legend / bars */
+  .legend{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:12px; }
+  .bars{ display:flex; flex-direction:column; gap:12px; }
+  .leg-row{ display:flex; flex-direction:column; gap:5px; }
+  .leg-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:13.5px; }
+  .leg-label{ display:flex; align-items:center; gap:8px; color:#333; font-weight:600; }
+  .swatch{ width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .leg-pct{ font-weight:800; font-family:'Baloo 2',sans-serif; font-size:14.5px; white-space:nowrap; }
+  .leg-count{ color:var(--muted); font-size:11.5px; font-weight:600; }
+  .track{ height:9px; border-radius:6px; background:var(--track); overflow:hidden; }
+  .fill{ height:100%; width:0%; border-radius:6px; transition:width 1s cubic-bezier(.22,1,.36,1); }
+  .card.in-view .fill{ width:var(--w); }
+
+  footer.note{
+    text-align:center; color:var(--muted); font-size:12.5px;
+    padding:10px 20px 50px;
+  }
+
+  @media (max-width:640px){
+    .hero{ padding:48px 16px 30px; }
+    .stat{ padding:12px 18px; min-width:100px; }
+    .card{ padding:22px 18px; }
+    .body-row{ gap:20px; }
+    .donut-wrap{ width:140px; height:140px; }
+    .donut-hole{ inset:18px; }
+  }
+</style>
+</head>
+<body class="loading">
+
+<div id="loader"><div class="spinner"></div></div>
+<div id="progress"></div>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<div id="page">
+  <section class="hero">
+    <span class="eyebrow">Survey results</span>
+    <h1><span class="ai">AI</span> Usage &amp; Habits Survey</h1>
+    <p class="sub">What people actually do with AI day to day straight from the responses.</p>
+    <div class="stats">
+      <div class="stat"><div class="num" id="statResponses">0</div><div class="lbl">Responses</div></div>
+      <div class="stat"><div class="num">7</div><div class="lbl">Questions</div></div>
+      <div class="stat"><div class="num" id="statTop">42.9%</div><div class="lbl">Top habit</div></div>
+    </div>
+  </section>
+
+  <div class="survey" id="surveyMount"></div>
+
+  <footer class="note">Based on 77 submitted responses · percentages rounded to one decimal place</footer>
+</div>
+
+<script>
+const N = 77;
+const QUESTIONS = [
+  {
+    title: "How often do you use an AI tool (ChatGPT, Claude, Gemini, etc.) in a day?",
+    type: "single",
+    options: [
+      { label:"10-20+ times", count:33, pct:42.9 },
+      { label:"25+ times", count:28, pct:36.4 },
+      { label:"1-10 times", count:16, pct:20.8 }
+    ]
+  },
+  {
+    title: "Which of these have you used AI for in the last week?",
+    note: "Multiple answers allowed — percentages are share of all respondents, so they add up to more than 100%.",
+    type: "multi",
+    options: [
+      { label:"Summarizing a long document or PDF", count:57, pct:74.0 },
+      { label:"Drafting a short WhatsApp/email message", count:50, pct:64.9 },
+      { label:"Fixing grammar or tone of a message", count:46, pct:59.7 },
+      { label:"Solving a math/accounting problem", count:33, pct:42.9 },
+      { label:"Writing an assignment or project", count:32, pct:41.6 },
+      { label:"Checking a fact you could've Googled", count:25, pct:32.5 },
+      { label:"Just to chat / pass time", count:12, pct:15.6 }
+    ]
+  },
+  {
+    title: "When you have a 2-minute task (like rewriting one sentence), what do you usually do?",
+    type: "single",
+    options: [
+      { label:"Depends on my mood", count:34, pct:44.2 },
+      { label:"Open an AI tool", count:22, pct:28.6 },
+      { label:"Do it myself", count:21, pct:27.3 }
+    ]
+  },
+  {
+    title: "Do you use more than one AI tool for the same kind of task?",
+    type: "single",
+    options: [
+      { label:"Yes, I switch between tools often", count:41, pct:53.2 },
+      { label:"Sometimes, just to compare answers", count:30, pct:39.0 },
+      { label:"No, I stick to one", count:6, pct:7.8 }
+    ]
+  },
+  {
+    title: "Do you ever ask AI to generate something just to see what it can do?",
+    type: "single",
+    options: [
+      { label:"Sometimes", count:44, pct:57.1 },
+      { label:"Rarely", count:17, pct:22.1 },
+      { label:"Very often", count:12, pct:15.6 },
+      { label:"Never", count:4, pct:5.2 }
+    ]
+  },
+  {
+    title: "How often do you re-run the same prompt because the first answer wasn't good enough?",
+    type: "single",
+    options: [
+      { label:"Sometimes", count:31, pct:40.3 },
+      { label:"Often — I keep retrying till I get what I want", count:24, pct:31.2 },
+      { label:"Rarely", count:22, pct:28.6 }
+    ]
+  },
+  {
+    title: "How often do you trust the AI's answer without double-checking it?",
+    note: "Question label inferred from the response options (Always / Often / Sometimes / Rarely) — the original wording wasn't present in the exported headers.",
+    type: "single",
+    options: [
+      { label:"Sometimes", count:42, pct:54.5 },
+      { label:"Always", count:18, pct:23.4 },
+      { label:"Often", count:13, pct:16.9 },
+      { label:"Rarely", count:4, pct:5.2 }
+    ]
+  }
+];
+
+const PALETTE = ["var(--red)","var(--orange)","var(--blue)","var(--teal)","var(--purple)","var(--pink)","var(--green)"];
+
+function buildDonut(options){
+  let acc = 0;
+  const stops = options.map((o,i)=>{
+    const start = acc;
+    acc += o.pct;
+    return `${PALETTE[i]} ${start}% ${acc}%`;
+  }).join(", ");
+  return `conic-gradient(${stops})`;
+}
+
+const mount = document.getElementById('surveyMount');
+
+QUESTIONS.forEach((q, qi) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const legendHTML = q.options.map((o,i)=>`
+    <div class="leg-row">
+      <div class="leg-top">
+        <span class="leg-label"><span class="swatch" style="background:${PALETTE[i]}"></span>${o.label}</span>
+        <span class="leg-pct" style="color:${PALETTE[i]}" data-target="${o.pct}">0%</span>
+      </div>
+      ${q.type==='single' ? `<div class="leg-count">${o.count} of ${N} respondents</div>` : ''}
+      ${q.type==='multi' ? `<div class="track"><div class="fill" style="--w:${o.pct}%; background:${PALETTE[i]}"></div></div>` : ''}
+    </div>
+  `).join("");
+
+  let bodyHTML;
+  if(q.type === 'single'){
+    const top = q.options[0];
+    bodyHTML = `
+      <div class="body-row">
+        <div class="donut-wrap">
+          <div class="donut" style="background:${buildDonut(q.options)}"></div>
+          <div class="donut-hole">
+            <div class="top-pct" style="color:${PALETTE[0]}">${top.pct}%</div>
+            <div class="top-lbl">${top.label}</div>
+          </div>
+        </div>
+        <div class="legend">${legendHTML}</div>
+      </div>`;
+  } else {
+    bodyHTML = `<div class="bars">${legendHTML}</div>`;
+  }
+
+  card.innerHTML = `
+    <span class="qnum">Question ${qi+1}</span>
+    <p class="qtitle">${q.title}</p>
+    ${q.note ? `<p class="qnote">${q.note}</p>` : ''}
+    ${bodyHTML}
+  `;
+  mount.appendChild(card);
+});
+
+// ---------- count-up helper ----------
+function countUp(el, target, duration=900){
+  const start = performance.now();
+  const suffix = "%";
+  function tick(now){
+    const p = Math.min((now-start)/duration, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = (target*eased).toFixed(1) + suffix;
+    if(p < 1) requestAnimationFrame(tick);
+    else el.textContent = target + suffix;
+  }
+  requestAnimationFrame(tick);
+}
+
+// ---------- reveal on scroll ----------
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.classList.add('in-view');
+      entry.target.querySelectorAll('.leg-pct').forEach(el=>{
+        if(!el.dataset.done){
+          el.dataset.done = "1";
+          countUp(el, parseFloat(el.dataset.target));
+        }
+      });
+      io.unobserve(entry.target);
+    }
+  });
+}, { threshold:.25 });
+
+document.querySelectorAll('.card').forEach(c=>io.observe(c));
+
+// ---------- scroll progress bar ----------
+function updateProgress(){
+  const h = document.documentElement;
+  const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+  document.getElementById('progress').style.width = (scrolled||0) + '%';
+}
+document.addEventListener('scroll', updateProgress, { passive:true });
+
+// ---------- loader + hero count-up ----------
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+    document.body.classList.remove('loading');
+    document.body.classList.add('revealed');
+    countUp(document.getElementById('statResponses'), 77, 1100);
+    document.getElementById('statResponses').textContent = '0'; // reset suffix override below
+    // statResponses should not have % suffix — custom count-up
+    const el = document.getElementById('statResponses');
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now-start)/1100, 1);
+      const eased = 1 - Math.pow(1-p, 3);
+      el.textContent = Math.round(77*eased);
+      if(p < 1) requestAnimationFrame(tick);
+      else el.textContent = 77;
+    }
+    requestAnimationFrame(tick);
+  }, 3000);
+});
+</script>
+
+</body>
+</html>
