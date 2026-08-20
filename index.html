@@ -35,17 +35,42 @@
   #loader{
     position:fixed; inset:0; background:var(--page-bg);
     display:flex; align-items:center; justify-content:center;
-    z-index:999; transition:opacity .5s ease, visibility .5s ease;
+    z-index:999; transition:opacity .6s ease, visibility .6s ease;
   }
   #loader.hide{ opacity:0; visibility:hidden; pointer-events:none; }
-  .spinner{
-    width:56px; height:56px; border-radius:50%;
-    border:5px solid #E4E6EC;
-    border-top-color:var(--orange);
-    border-right-color:var(--red);
-    animation:spin .9s linear infinite;
+
+  .loader-box{
+    display:flex; flex-direction:column; align-items:center; gap:18px;
+    background:#ffffff; border-radius:28px; padding:40px 48px;
+    box-shadow:0 12px 40px rgba(20,20,40,.09);
+    text-align:center; min-width:290px;
   }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .spinner-ring{
+    position:relative; width:110px; height:110px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ring-svg{ width:100%; height:100%; }
+  #loaderRing{
+    transition:stroke-dasharray 0.05s linear;
+  }
+  .loader-pct{
+    position:absolute; font-family:'Baloo 2',sans-serif;
+    font-weight:800; font-size:26px;
+    background:linear-gradient(90deg,var(--red),var(--orange));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .loader-text{
+    font-weight:700; font-size:14px; color:var(--muted); letter-spacing:.4px;
+  }
+  .loader-bar-track{
+    width:100%; height:8px; background:var(--track); border-radius:10px; overflow:hidden;
+  }
+  .loader-bar-fill{
+    height:100%; width:0%; border-radius:10px;
+    background:linear-gradient(90deg,var(--red),var(--orange));
+    transition:width 0.05s linear;
+  }
   body.loading #page{ visibility:hidden; }
 
   /* ---------------- scroll progress ---------------- */
@@ -225,7 +250,27 @@
 </head>
 <body class="loading">
 
-<div id="loader"><div class="spinner"></div></div>
+<div id="loader">
+  <div class="loader-box">
+    <div class="spinner-ring">
+      <svg viewBox="0 0 100 100" class="ring-svg">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="var(--track)" stroke-width="8" />
+        <circle id="loaderRing" cx="50" cy="50" r="42" fill="none" stroke="url(#loaderGrad)" stroke-width="8" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 50 50)" />
+        <defs>
+          <linearGradient id="loaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--red)" />
+            <stop offset="100%" stop-color="var(--orange)" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="loader-pct" id="loaderPct">0%</div>
+    </div>
+    <div class="loader-text">Loading Survey Results...</div>
+    <div class="loader-bar-track">
+      <div class="loader-bar-fill" id="loaderBar"></div>
+    </div>
+  </div>
+</div>
 <div id="progress"></div>
 <div class="blob blob1"></div>
 <div class="blob blob2"></div>
@@ -463,15 +508,43 @@ window.addEventListener('beforeunload', () => {
   window.scrollTo(0, 0);
 });
 
-// ---------- loader + hero reveal ----------
+// ---------- 5-second 0% to 100% loader + hero reveal ----------
 window.addEventListener('load', () => {
   window.scrollTo(0, 0);
-  setTimeout(() => {
-    const loader = document.getElementById('loader');
-    if (loader) loader.classList.add('hide');
-    document.body.classList.remove('loading');
-    document.body.classList.add('revealed');
-  }, 300);
+
+  const pctEl = document.getElementById('loaderPct');
+  const barEl = document.getElementById('loaderBar');
+  const ringEl = document.getElementById('loaderRing');
+  const DURATION = 5000; // 5 SECONDS EXACTLY
+  const start = performance.now();
+
+  function animateLoader(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / DURATION, 1);
+    const pct = Math.floor(progress * 100);
+
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (barEl) barEl.style.width = pct + '%';
+    if (ringEl) ringEl.style.strokeDasharray = `${pct} 100`;
+
+    if (progress < 1) {
+      requestAnimationFrame(animateLoader);
+    } else {
+      // 100% reached after 5 seconds!
+      if (pctEl) pctEl.textContent = '100%';
+      if (barEl) barEl.style.width = '100%';
+      if (ringEl) ringEl.style.strokeDasharray = '100 100';
+
+      setTimeout(() => {
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hide');
+        document.body.classList.remove('loading');
+        document.body.classList.add('revealed');
+      }, 250);
+    }
+  }
+
+  requestAnimationFrame(animateLoader);
 });
 </script>
 
