@@ -454,13 +454,24 @@ function updateProgress(){
 }
 document.addEventListener('scroll', updateProgress, { passive:true });
 
-// ---------- loader + hero count-up ----------
+// ---------- scroll restoration to top on refresh ----------
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+
+window.addEventListener('beforeunload', () => {
+  window.scrollTo(0, 0);
+});
+
+// ---------- loader + hero reveal ----------
 window.addEventListener('load', () => {
+  window.scrollTo(0, 0);
   setTimeout(() => {
-    document.getElementById('loader').classList.add('hide');
+    const loader = document.getElementById('loader');
+    if (loader) loader.classList.add('hide');
     document.body.classList.remove('loading');
     document.body.classList.add('revealed');
-  }, 3000);
+  }, 300);
 });
 </script>
 
