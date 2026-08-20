@@ -226,8 +226,25 @@
   .card.in-view .fill{ width:var(--w); }
 
   footer.note{
-    text-align:center; color:var(--muted); font-size:12.5px;
-    padding:10px 20px 50px;
+    text-align:center; color:var(--muted); font-size:13.5px; font-weight:600;
+    padding:20px 20px 60px; display:flex; align-items:center; justify-content:center; gap:8px;
+    user-select:none;
+  }
+  .smile-icon{
+    font-size:20px; cursor:pointer; display:inline-block;
+    transition:transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease;
+  }
+  .smile-icon:hover{
+    transform:scale(1.5) rotate(15deg);
+    filter:drop-shadow(0 4px 8px rgba(255,138,30,0.4));
+  }
+  .smile-icon.spin{
+    animation:smilePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.4);
+  }
+  @keyframes smilePop{
+    0% { transform:scale(1) rotate(0deg); }
+    50% { transform:scale(1.8) rotate(180deg); }
+    100% { transform:scale(1) rotate(360deg); }
   }
 
   @media (max-width:640px){
@@ -274,7 +291,10 @@
 
   <div class="survey" id="surveyMount"></div>
 
-  <footer class="note">percentages rounded to one decimal place</footer>
+  <footer class="note">
+    <span>Percentages rounded to one decimal place</span>
+    <span class="smile-icon" id="smileBtn" title="Click for a smile! 😊" role="button" tabindex="0">😊</span>
+  </footer>
 </div>
 
 <script>
@@ -539,6 +559,21 @@ window.addEventListener('load', () => {
 
   requestAnimationFrame(animateLoader);
 });
+// ---------- smile emoji interaction ----------
+const smileBtn = document.getElementById('smileBtn');
+if (smileBtn) {
+  const smiles = ['😊', '😄', '🥳', '✨', '🚀', '🌟', '💖', '🤗', '😎'];
+  let smileIdx = 0;
+  smileBtn.addEventListener('click', () => {
+    smileBtn.classList.remove('spin');
+    void smileBtn.offsetWidth;
+    smileBtn.classList.add('spin');
+    smileIdx = (smileIdx + 1) % smiles.length;
+    setTimeout(() => {
+      smileBtn.textContent = smiles[smileIdx];
+    }, 200);
+  });
+}
 </script>
 
 </body>
